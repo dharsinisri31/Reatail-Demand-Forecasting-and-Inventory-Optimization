@@ -1,0 +1,417 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Retail Demand Forecasting and Inventory Optimization</title>
+
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet">
+
+<script src="https://cdn.plot.ly/plotly-2.35.2.min.js"></script>
+
+<style>
+
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+}
+
+body{
+    background:#05080f;
+    color:white;
+    font-family:'DM Sans',sans-serif;
+    overflow-x:hidden;
+}
+
+.header{
+    width:100%;
+    padding:30px;
+    background:#0b1220;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+}
+
+.header h1{
+    font-size:34px;
+    font-family:'Syne',sans-serif;
+    color:#00ffc6;
+}
+
+.header p{
+    color:#94a3b8;
+    margin-top:10px;
+}
+
+.container{
+    width:95%;
+    margin:auto;
+    padding:30px 0;
+}
+
+.kpi-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+    margin-bottom:40px;
+}
+
+.kpi-card{
+    background:#111827;
+    border-radius:18px;
+    padding:25px;
+    border:1px solid rgba(255,255,255,0.05);
+}
+
+.kpi-card h3{
+    color:#94a3b8;
+    font-size:14px;
+}
+
+.kpi-card h1{
+    color:#00ffc6;
+    margin-top:15px;
+    font-size:38px;
+}
+
+.card{
+    background:#081228;
+    border-radius:20px;
+    padding:25px;
+    margin-bottom:35px;
+    border:1px solid rgba(255,255,255,0.05);
+}
+
+.card h2{
+    margin-bottom:20px;
+    color:#00ffc6;
+}
+
+.chart{
+    width:100%;
+    height:500px;
+}
+
+.prediction-grid{
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.predict-field{
+    display:flex;
+    flex-direction:column;
+    gap:8px;
+}
+
+.predict-field label{
+    color:#94a3b8;
+    font-size:14px;
+}
+
+.predict-field input,
+.predict-field select{
+    width:100%;
+    padding:14px;
+    border:none;
+    border-radius:12px;
+    background:#0f172a;
+    color:white;
+    font-size:15px;
+    outline:none;
+}
+
+.predict-field input:focus,
+.predict-field select:focus{
+    border:1px solid #00ffc6;
+}
+
+.forecast-btn{
+    width:100%;
+    padding:16px;
+    border:none;
+    border-radius:14px;
+    background:linear-gradient(135deg,#00ffc6,#00c896);
+    color:#041018;
+    font-weight:700;
+    cursor:pointer;
+    font-size:16px;
+    margin-top:10px;
+}
+
+.forecast-btn:hover{
+    transform:scale(1.01);
+}
+
+.output-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(250px,1fr));
+    gap:20px;
+    margin-top:30px;
+}
+
+.output-card{
+    background:#0f172a;
+    padding:25px;
+    border-radius:16px;
+}
+
+.output-card h3{
+    color:#94a3b8;
+    margin-bottom:10px;
+}
+
+.output-card p{
+    font-size:32px;
+    color:#00ffc6;
+    font-weight:700;
+}
+
+table{
+    width:100%;
+    border-collapse:collapse;
+}
+
+th,td{
+    padding:14px;
+    border-bottom:1px solid rgba(255,255,255,0.06);
+}
+
+th{
+    background:#0f172a;
+    color:#94a3b8;
+}
+
+@media(max-width:768px){
+
+    .chart{
+        height:350px;
+    }
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="header">
+    <h1>Retail Demand Forecasting </h1>
+    <p>LSTM + GRU Forecasting | Inventory Optimization | Supply Chain Analytics</p>
+</div>
+
+<div class="container">
+
+<div class="kpi-grid">
+
+    <div class="kpi-card">
+        <h3>Total Sales</h3>
+        <h1>$2.4M</h1>
+    </div>
+
+    <div class="kpi-card">
+        <h3>LSTM Accuracy</h3>
+        <h1>94%</h1>
+    </div>
+
+    <div class="kpi-card">
+        <h3>GRU Accuracy</h3>
+        <h1>91%</h1>
+    </div>
+
+    <div class="kpi-card">
+        <h3>Inventory Saved</h3>
+        <h1>32%</h1>
+    </div>
+
+</div>
+
+<div class="card">
+    <h2>Historical Sales(Trained Dataset)</h2>
+    <div id="trainedGraph" class="chart"></div>
+</div>
+
+<div class="card">
+    <h2>Daily Sales </h2>
+    <div id="dailyChart" class="chart"></div>
+</div>
+
+<div class="card">
+    <h2>Weekly Sales Forecast</h2>
+    <div id="weeklyChart" class="chart"></div>
+</div>
+
+<div class="card">
+    <h2>Monthly Demand Pattern</h2>
+    <div id="monthlyChart" class="chart"></div>
+</div>
+
+<div class="card">
+    <h2>Actual vs Predicted</h2>
+    <div id="actualChart" class="chart"></div>
+</div>
+
+<div class="card">
+    <h2>Training Loss vs Validation Loss</h2>
+    <div id="lossChart" class="chart"></div>
+</div>
+
+<div class="card">
+    <h2>LSTM vs GRU Comparison</h2>
+    <div id="comparisonChart" class="chart"></div>
+</div>
+
+<div class="card">
+    <h2>Inventory Optimization Analytics</h2>
+    <div id="inventoryChart" class="chart"></div>
+</div>
+
+<div class="card">
+
+<h2>Demand Forecasting</h2>
+
+<div class="prediction-grid">
+
+    <div class="predict-field">
+        <label>Store</label>
+        
+<select id="store">
+
+<option value="1">Store 1</option>
+<option value="2">Store 2</option>
+<option value="3">Store 3</option>
+<option value="4">Store 4</option>
+<option value="5">Store 5</option>
+<option value="6">Store 6</option>
+<option value="7">Store 7</option>
+<option value="8">Store 8</option>
+<option value="9">Store 9</option>
+<option value="10">Store 10</option>
+
+</select>
+
+    </div>
+
+    <div class="predict-field">
+        <label>Department</label>
+        
+<select id="dept">
+
+<option value="1">Electronics</option>
+<option value="2">Groceries</option>
+<option value="3">Clothing</option>
+<option value="4">Furniture</option>
+<option value="5">Sports</option>
+<option value="6">Health Care</option>
+<option value="7">Toys</option>
+<option value="8">Beauty</option>
+<option value="9">Automotive</option>
+<option value="10">Home Appliances</option>
+
+</select>
+
+    </div>
+
+    <div class="predict-field">
+        <label>Temperature</label>
+        <input type="number" id="temp" placeholder="Temperature">
+    </div>
+    <div class="predict-field">
+        <label>Previous sales</label>
+        <input type="number" id="sales" placeholder="sales">
+    </div>
+    
+<div class="predict-field">
+    <label>Holiday Week</label>
+    <select id="holiday">
+        <option value="No">No</option>
+        <option value="Yes">Yes</option>
+    </select>
+</div>
+    <div class="predict-field">
+        <label>Fuel Price</label>
+        <input type="number" id="fuel" placeholder="Fuel Price">
+    </div>
+
+    <div class="predict-field">
+        <label>CPI</label>
+        <input type="number" id="cpi" placeholder="CPI">
+    </div>
+
+    <div class="predict-field">
+        <label>Unemployment</label>
+        <input type="number" id="unemployment" placeholder="Unemployment">
+    </div>
+
+    <button type="button" class="forecast-btn" onclick="predictDemand()">
+        Generate Forecast
+    </button>
+
+</div>
+
+<div class="output-grid">
+
+    <div class="output-card">
+        <h3>Forecasted Demand</h3>
+        <p id="forecast">--</p>
+    </div>
+
+    <div class="output-card">
+        <h3>Suggested Inventory</h3>
+        <p id="inventory">--</p>
+    </div>
+
+    <div class="output-card">
+        <h3>Stock Status</h3>
+        <p id="status">--</p>
+    </div>
+
+</div>
+
+<div id="futureSalesChart"
+style="height:500px;margin-top:40px;">
+</div>
+
+</div>
+
+<div class="card">
+
+<h2>Historical Dataset</h2>
+
+<table>
+
+<tr>
+<th>Date</th>
+<th>Sales</th>
+<th>Predicted</th>
+</tr>
+
+<tr>
+<td>2025-01-01</td>
+<td>120</td>
+<td>125</td>
+</tr>
+
+<tr>
+<td>2025-01-02</td>
+<td>150</td>
+<td>148</td>
+</tr>
+
+<tr>
+<td>2025-01-03</td>
+<td>180</td>
+<td>175</td>
+</tr>
+
+</table>
+
+</div>
+
+</div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
